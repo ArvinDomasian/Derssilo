@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { ensureUserRecord } from "@/lib/auth";
+import { requireDbUser } from "@/lib/auth";
 
 export default async function CheckoutPage() {
   const { userId } = auth();
@@ -10,10 +10,11 @@ export default async function CheckoutPage() {
     return <p>Please sign in to access checkout.</p>;
   }
 
-  const user = await ensureUserRecord();
-
-  if (!user) {
-    return <p>Unable to load user account.</p>;
+  let user;
+  try {
+    user = await requireDbUser();
+  } catch {
+    return <p>Your account is pending admin approval.</p>;
   }
 
   const cartItems = await prisma.cartItem.findMany({

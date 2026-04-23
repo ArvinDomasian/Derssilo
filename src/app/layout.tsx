@@ -22,6 +22,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/">Shop</Link>
                 <Link href="/checkout">Checkout</Link>
                 <Link href="/messages">Messages</Link>
+                <Link href="/admin/users">Admin Users</Link>
+                <Link href="/admin/products">Admin Products</Link>
                 <SignedOut>
                   <SignInButton />
                 </SignedOut>

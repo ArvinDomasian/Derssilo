@@ -27,7 +27,8 @@ export async function ensureUserRecord() {
     data: {
       clerkUserId: userId,
       email: clerkUser.emailAddresses[0].emailAddress,
-      name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim() || null
+      name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim() || null,
+      status: "PENDING"
     }
   });
 }
@@ -36,6 +37,9 @@ export async function requireDbUser() {
   const user = await ensureUserRecord();
   if (!user) {
     throw new Error("Unauthorized");
+  }
+  if (user.status !== "APPROVED") {
+    throw new Error("Account pending approval");
   }
   return user;
 }

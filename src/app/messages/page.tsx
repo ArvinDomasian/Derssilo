@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { ensureUserRecord } from "@/lib/auth";
+import { requireDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export default async function MessagesPage() {
@@ -8,9 +8,11 @@ export default async function MessagesPage() {
     return <p>Please sign in to view messages.</p>;
   }
 
-  const dbUser = await ensureUserRecord();
-  if (!dbUser) {
-    return <p>Unable to load user.</p>;
+  let dbUser;
+  try {
+    dbUser = await requireDbUser();
+  } catch {
+    return <p>Your account is pending admin approval.</p>;
   }
 
   const conversations = await prisma.conversation.findMany({
