@@ -12,7 +12,7 @@ export default async function MessagesPage() {
   try {
     dbUser = await requireDbUser();
   } catch {
-    return <p>Your account is pending admin approval.</p>;
+    return <p>Unable to load user.</p>;
   }
 
   const conversations = await prisma.conversation.findMany({

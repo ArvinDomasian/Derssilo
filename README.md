@@ -1,6 +1,6 @@
 # Dressilo
 
-Dressilo is a Next.js + Neon + Prisma clothing store MVP with Clerk auth, mock card checkout, Cash on Delivery, messaging, and admin user management.
+Dressilo is a Next.js + Neon + Prisma clothing store MVP with Clerk auth, mock card checkout, Cash on Delivery, and messaging.
 
 ## Setup
 
@@ -24,5 +24,4 @@ Dressilo is a Next.js + Neon + Prisma clothing store MVP with Clerk auth, mock c
 - `/` shop catalog + category filter
 - `/checkout` cart summary + COD / mock card actions
 - `/messages` user-to-user messaging
-- `/admin/users` admin user list
 - `/sign-in` and `/sign-up` Clerk auth screens

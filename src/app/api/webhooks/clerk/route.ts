@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   await prisma.user.upsert({
     where: { clerkUserId: clerkId },
     update: { email, name },
-    create: { clerkUserId: clerkId, email, name, status: "PENDING" }
+    create: { clerkUserId: clerkId, email, name }
   });
 
   return NextResponse.json({ ok: true });

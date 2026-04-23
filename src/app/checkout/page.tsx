@@ -14,7 +14,7 @@ export default async function CheckoutPage() {
   try {
     user = await requireDbUser();
   } catch {
-    return <p>Your account is pending admin approval.</p>;
+    return <p>Unable to load user account.</p>;
   }
 
   const cartItems = await prisma.cartItem.findMany({
