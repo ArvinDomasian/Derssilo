@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { prisma } from "@/lib/prisma";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,7 +10,15 @@ export const metadata: Metadata = {
   description: "Dressilo e-commerce app"
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { userId } = auth();
+  const dbUser = userId
+    ? await prisma.user.findUnique({
+        where: { clerkUserId: userId },
+        select: { role: true }
+      })
+    : null;
+
   return (
     <ClerkProvider>
       <html lang="en">
@@ -22,6 +32,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/">Shop</Link>
                 <Link href="/checkout">Checkout</Link>
                 <Link href="/messages">Messages</Link>
+                {dbUser?.role === "ADMIN" && (
+                  <SignedIn>
+                    <Link href="/admin/users">Admin Users</Link>
+                  </SignedIn>
+                )}
                 <SignedOut>
                   <SignInButton />
                 </SignedOut>
