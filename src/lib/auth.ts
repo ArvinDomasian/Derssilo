@@ -23,11 +23,14 @@ export async function ensureUserRecord() {
     return null;
   }
 
+  const email = clerkUser.emailAddresses[0].emailAddress.toLowerCase();
+  const name = `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim() || null;
+
   return prisma.user.create({
     data: {
       clerkUserId: userId,
-      email: clerkUser.emailAddresses[0].emailAddress,
-      name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim() || null
+      email,
+      name
     }
   });
 }
@@ -36,14 +39,6 @@ export async function requireDbUser() {
   const user = await ensureUserRecord();
   if (!user) {
     throw new Error("Unauthorized");
-  }
-  return user;
-}
-
-export async function requireAdmin() {
-  const user = await requireDbUser();
-  if (user.role !== "ADMIN") {
-    throw new Error("Forbidden");
   }
   return user;
 }
