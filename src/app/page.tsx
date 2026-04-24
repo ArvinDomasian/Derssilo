@@ -2,13 +2,15 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 type PageProps = {
-  searchParams?: { category?: string; product?: string; sort?: string; special?: string };
+  searchParams?: { category?: string; product?: string; sort?: string; special?: string; sub?: string; child?: string };
 };
 
 export default async function ShopPage({ searchParams }: PageProps) {
   const selectedCategory = searchParams?.category;
   const selectedProductId = searchParams?.product;
   const selectedSpecial = searchParams?.special;
+  const selectedSub = searchParams?.sub;
+  const selectedChild = searchParams?.child;
   const selectedSort = searchParams?.sort ?? "relevance";
   const sortKey =
     selectedSort === "popular" || selectedSort === "most-new" || selectedSort === "price" || selectedSort === "relevance"
@@ -30,18 +32,78 @@ export default async function ShopPage({ searchParams }: PageProps) {
     { key: "fashion", label: "Fashion", keywords: ["fashion", "dress", "shirt", "clothing", "apparel"] },
     { key: "groceries", label: "Groceries", keywords: ["grocery", "food", "snack", "drink", "fresh"] }
   ] as const;
+  const mobileSubCategories = [
+    { key: "phone", label: "Phone", keywords: ["phone", "mobile", "smartphone", "iphone", "android"] },
+    { key: "tablet", label: "Tablet", keywords: ["tablet", "ipad", "tab"] },
+    { key: "pc", label: "PC", keywords: ["pc", "laptop", "desktop", "computer", "notebook"] },
+    { key: "monitor", label: "Monitor", keywords: ["monitor", "display", "screen"] },
+    { key: "accessories", label: "Accessories", keywords: ["accessory", "charger", "cable", "earbuds", "headphone"] }
+  ] as const;
+  const healthSubCategories = [
+    { key: "bath-body", label: "Bath & Body", keywords: ["bath", "body wash", "soap", "lotion", "shower"] },
+    { key: "oral-care", label: "Oral Care", keywords: ["oral", "tooth", "toothpaste", "mouthwash", "dental"] },
+    { key: "hair-care", label: "Hair Care", keywords: ["hair", "shampoo", "conditioner", "serum", "scalp"] },
+    { key: "sun-care", label: "Sun Care", keywords: ["sun care", "sunscreen", "spf", "uv"] },
+    { key: "whitening", label: "Whitening", keywords: ["whitening", "brightening", "tone", "lightening"] },
+    { key: "facial-products", label: "Facial Products", keywords: ["facial", "face wash", "cleanser", "moisturizer", "serum"] }
+  ] as const;
+  const homeSubCategories = [
+    { key: "storage", label: "Storage", keywords: ["storage", "organizer", "cabinet", "shelf", "container"] },
+    { key: "dining", label: "Dining", keywords: ["dining", "tableware", "plate", "cutlery", "kitchen"] },
+    { key: "office", label: "Office", keywords: ["office", "desk", "chair", "workspace", "stationery"] }
+  ] as const;
+  const fashionSubCategories = [
+    { key: "mens-wear", label: "Men's wear", keywords: ["men", "mens", "male", "gent"] },
+    { key: "womens-wear", label: "Women's wear", keywords: ["women", "womens", "female", "ladies"] },
+    { key: "kids-wear", label: "Kids' wear", keywords: ["kids", "children", "child", "baby", "infant"] },
+    { key: "footwear", label: "Footwear", keywords: ["shoe", "footwear", "sneaker", "sandal", "boot", "heel", "flat"] }
+  ] as const;
+  const mensWearChildCategories = [
+    { key: "shirts", label: "Shirts", keywords: ["shirt", "t-shirt", "tee", "polo"] },
+    { key: "trousers", label: "Trousers", keywords: ["trouser", "pants", "slacks", "chino"] },
+    { key: "suits", label: "Suits", keywords: ["suit", "blazer", "formal"] },
+    { key: "jackets", label: "Jackets", keywords: ["jacket", "coat", "outerwear"] }
+  ] as const;
+  const womensWearChildCategories = [
+    { key: "dresses", label: "Dresses", keywords: ["dress", "gown"] },
+    { key: "tops", label: "Tops", keywords: ["top", "blouse", "tee"] },
+    { key: "skirts", label: "Skirts", keywords: ["skirt"] },
+    { key: "jeans", label: "Jeans", keywords: ["jeans", "denim"] }
+  ] as const;
+  const kidsWearChildCategories = [
+    { key: "children", label: "Children", keywords: ["children", "child", "kid", "boy", "girl"] },
+    { key: "babies", label: "Babies", keywords: ["baby", "babies", "infant", "newborn", "toddler"] }
+  ] as const;
+  const footwearChildCategories = [
+    { key: "sneakers", label: "Sneakers", keywords: ["sneaker", "trainer", "running shoe"] },
+    { key: "sandals", label: "Sandals", keywords: ["sandal", "slipper"] },
+    { key: "boots", label: "Boots", keywords: ["boot"] },
+    { key: "heels", label: "Heels", keywords: ["heel", "stiletto", "pump"] },
+    { key: "flats-casual-shoes", label: "Flats / Casual shoes", keywords: ["flat", "casual shoe", "loafer", "slip-on"] }
+  ] as const;
 
-  const getShopHref = (next: { category?: string; product?: string; sort?: string }) => {
+  const getShopHref = (next: {
+    category?: string;
+    product?: string;
+    sort?: string;
+    special?: string;
+    sub?: string;
+    child?: string;
+  }) => {
     const category = next.category ?? selectedCategory;
     const product = next.product ?? selectedProductId;
     const sort = next.sort ?? sortKey;
-    const special = searchParams?.special;
+    const special = next.special ?? selectedSpecial;
+    const sub = next.sub ?? selectedSub;
+    const child = next.child ?? selectedChild;
     const query: Record<string, string> = {};
 
     if (category) query.category = category;
     if (product) query.product = product;
     if (sort && sort !== "relevance") query.sort = sort;
     if (special) query.special = special;
+    if (sub) query.sub = sub;
+    if (child) query.child = child;
 
     return { pathname: "/", query };
   };
@@ -59,10 +121,48 @@ export default async function ShopPage({ searchParams }: PageProps) {
     orderBy
   });
   const activeSpecial = specialCategories.find((item) => item.key === selectedSpecial) ?? null;
+  const activeMobileSub = mobileSubCategories.find((item) => item.key === selectedSub) ?? null;
+  const activeHealthSub = healthSubCategories.find((item) => item.key === selectedSub) ?? null;
+  const activeHomeSub = homeSubCategories.find((item) => item.key === selectedSub) ?? null;
+  const activeFashionSub = fashionSubCategories.find((item) => item.key === selectedSub) ?? null;
+  const activeMensWearChild = mensWearChildCategories.find((item) => item.key === selectedChild) ?? null;
+  const activeWomensWearChild = womensWearChildCategories.find((item) => item.key === selectedChild) ?? null;
+  const activeKidsWearChild = kidsWearChildCategories.find((item) => item.key === selectedChild) ?? null;
+  const activeFootwearChild = footwearChildCategories.find((item) => item.key === selectedChild) ?? null;
   const products = activeSpecial
     ? allProducts.filter((product) => {
         const searchableText = `${product.name} ${product.description} ${product.category.name}`.toLowerCase();
-        return activeSpecial.keywords.some((keyword) => searchableText.includes(keyword));
+        if (!activeSpecial.keywords.some((keyword) => searchableText.includes(keyword))) {
+          return false;
+        }
+        if (activeSpecial.key === "mobiles-gadgets" && activeMobileSub) {
+          return activeMobileSub.keywords.some((keyword) => searchableText.includes(keyword));
+        }
+        if (activeSpecial.key === "health-personal-care" && activeHealthSub) {
+          return activeHealthSub.keywords.some((keyword) => searchableText.includes(keyword));
+        }
+        if (activeSpecial.key === "home-living" && activeHomeSub) {
+          return activeHomeSub.keywords.some((keyword) => searchableText.includes(keyword));
+        }
+        if (activeSpecial.key === "fashion" && activeFashionSub) {
+          const parentMatches = activeFashionSub.keywords.some((keyword) => searchableText.includes(keyword));
+          if (!parentMatches) {
+            return false;
+          }
+          if (activeFashionSub.key === "mens-wear" && activeMensWearChild) {
+            return activeMensWearChild.keywords.some((keyword) => searchableText.includes(keyword));
+          }
+          if (activeFashionSub.key === "womens-wear" && activeWomensWearChild) {
+            return activeWomensWearChild.keywords.some((keyword) => searchableText.includes(keyword));
+          }
+          if (activeFashionSub.key === "kids-wear" && activeKidsWearChild) {
+            return activeKidsWearChild.keywords.some((keyword) => searchableText.includes(keyword));
+          }
+          if (activeFashionSub.key === "footwear" && activeFootwearChild) {
+            return activeFootwearChild.keywords.some((keyword) => searchableText.includes(keyword));
+          }
+        }
+        return true;
       })
     : allProducts;
   const featuredProduct =
@@ -94,20 +194,186 @@ export default async function ShopPage({ searchParams }: PageProps) {
               {specialCategories.map((item) => {
                 const active = selectedSpecial === item.key;
                 return (
-                  <Link
-                    key={item.key}
-                    href={{
-                      pathname: "/",
-                      query: {
-                        ...(sortKey !== "relevance" ? { sort: sortKey } : {}),
-                        special: item.key
-                      }
-                    }}
-                    className={`flex items-center gap-2 ${active ? "font-medium text-emerald-700" : ""}`}
-                  >
-                    <span className={`h-3.5 w-3.5 rounded border ${active ? "border-emerald-600 bg-emerald-500" : "border-slate-300"}`} />
-                    {item.label}
-                  </Link>
+                  <div key={item.key} className="space-y-2">
+                    <Link
+                      href={getShopHref({
+                        special: item.key,
+                        sub:
+                          item.key === "mobiles-gadgets"
+                            ? selectedSub
+                            : item.key === "health-personal-care"
+                              ? selectedSub
+                              : item.key === "home-living"
+                                ? selectedSub
+                                : item.key === "fashion"
+                                  ? selectedSub
+                              : "",
+                        child: item.key === "fashion" ? selectedChild : "",
+                        product: ""
+                      })}
+                      className={`flex items-center gap-2 ${active ? "font-medium text-emerald-700" : ""}`}
+                    >
+                      <span className={`h-3.5 w-3.5 rounded border ${active ? "border-emerald-600 bg-emerald-500" : "border-slate-300"}`} />
+                      {item.label}
+                    </Link>
+                    {item.key === "mobiles-gadgets" && active && (
+                      <div className="ml-5 space-y-1.5 border-l border-slate-200 pl-3 text-xs">
+                        {mobileSubCategories.map((subItem) => {
+                          const subActive = selectedSub === subItem.key;
+                          return (
+                            <Link
+                              key={subItem.key}
+                              href={getShopHref({ special: "mobiles-gadgets", sub: subItem.key, product: "" })}
+                              className={`block ${subActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"}`}
+                            >
+                              {subItem.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {item.key === "health-personal-care" && active && (
+                      <div className="ml-5 space-y-1.5 border-l border-slate-200 pl-3 text-xs">
+                        {healthSubCategories.map((subItem) => {
+                          const subActive = selectedSub === subItem.key;
+                          return (
+                            <Link
+                              key={subItem.key}
+                              href={getShopHref({ special: "health-personal-care", sub: subItem.key, product: "" })}
+                              className={`block ${subActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"}`}
+                            >
+                              {subItem.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {item.key === "home-living" && active && (
+                      <div className="ml-5 space-y-1.5 border-l border-slate-200 pl-3 text-xs">
+                        {homeSubCategories.map((subItem) => {
+                          const subActive = selectedSub === subItem.key;
+                          return (
+                            <Link
+                              key={subItem.key}
+                              href={getShopHref({ special: "home-living", sub: subItem.key, product: "" })}
+                              className={`block ${subActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"}`}
+                            >
+                              {subItem.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {item.key === "fashion" && active && (
+                      <div className="ml-5 space-y-1.5 border-l border-slate-200 pl-3 text-xs">
+                        {fashionSubCategories.map((subItem) => {
+                          const subActive = selectedSub === subItem.key;
+                          return (
+                            <div key={subItem.key} className="space-y-1.5">
+                              <Link
+                                href={getShopHref({ special: "fashion", sub: subItem.key, child: "", product: "" })}
+                                className={`block ${subActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"}`}
+                              >
+                                {subItem.label}
+                              </Link>
+                              {subItem.key === "mens-wear" && subActive && (
+                                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                                  {mensWearChildCategories.map((childItem) => {
+                                    const childActive = selectedChild === childItem.key;
+                                    return (
+                                      <Link
+                                        key={childItem.key}
+                                        href={getShopHref({
+                                          special: "fashion",
+                                          sub: "mens-wear",
+                                          child: childItem.key,
+                                          product: ""
+                                        })}
+                                        className={`block ${
+                                          childActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"
+                                        }`}
+                                      >
+                                        {childItem.label}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              {subItem.key === "womens-wear" && subActive && (
+                                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                                  {womensWearChildCategories.map((childItem) => {
+                                    const childActive = selectedChild === childItem.key;
+                                    return (
+                                      <Link
+                                        key={childItem.key}
+                                        href={getShopHref({
+                                          special: "fashion",
+                                          sub: "womens-wear",
+                                          child: childItem.key,
+                                          product: ""
+                                        })}
+                                        className={`block ${
+                                          childActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"
+                                        }`}
+                                      >
+                                        {childItem.label}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              {subItem.key === "kids-wear" && subActive && (
+                                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                                  {kidsWearChildCategories.map((childItem) => {
+                                    const childActive = selectedChild === childItem.key;
+                                    return (
+                                      <Link
+                                        key={childItem.key}
+                                        href={getShopHref({
+                                          special: "fashion",
+                                          sub: "kids-wear",
+                                          child: childItem.key,
+                                          product: ""
+                                        })}
+                                        className={`block ${
+                                          childActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"
+                                        }`}
+                                      >
+                                        {childItem.label}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              {subItem.key === "footwear" && subActive && (
+                                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                                  {footwearChildCategories.map((childItem) => {
+                                    const childActive = selectedChild === childItem.key;
+                                    return (
+                                      <Link
+                                        key={childItem.key}
+                                        href={getShopHref({
+                                          special: "fashion",
+                                          sub: "footwear",
+                                          child: childItem.key,
+                                          product: ""
+                                        })}
+                                        className={`block ${
+                                          childActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"
+                                        }`}
+                                      >
+                                        {childItem.label}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
