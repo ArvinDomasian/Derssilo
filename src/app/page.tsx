@@ -2,18 +2,69 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 type PageProps = {
-  searchParams?: { category?: string; product?: string };
+  searchParams?: { category?: string; product?: string; sort?: string; special?: string };
 };
 
 export default async function ShopPage({ searchParams }: PageProps) {
   const selectedCategory = searchParams?.category;
   const selectedProductId = searchParams?.product;
-  const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
-  const products = await prisma.product.findMany({
+  const selectedSpecial = searchParams?.special;
+  const selectedSort = searchParams?.sort ?? "relevance";
+  const sortKey =
+    selectedSort === "popular" || selectedSort === "most-new" || selectedSort === "price" || selectedSort === "relevance"
+      ? selectedSort
+      : "relevance";
+  const nextSort =
+    sortKey === "relevance"
+      ? "popular"
+      : sortKey === "popular"
+        ? "most-new"
+        : sortKey === "most-new"
+          ? "price"
+          : "relevance";
+
+  const specialCategories = [
+    { key: "mobiles-gadgets", label: "Mobiles & Gadgets", keywords: ["mobile", "phone", "gadget", "electronics", "tech"] },
+    { key: "health-personal-care", label: "Health & Personal Care", keywords: ["health", "care", "personal", "wellness", "beauty"] },
+    { key: "home-living", label: "Home & Living", keywords: ["home", "living", "kitchen", "furniture", "decor"] },
+    { key: "fashion", label: "Fashion", keywords: ["fashion", "dress", "shirt", "clothing", "apparel"] },
+    { key: "groceries", label: "Groceries", keywords: ["grocery", "food", "snack", "drink", "fresh"] }
+  ] as const;
+
+  const getShopHref = (next: { category?: string; product?: string; sort?: string }) => {
+    const category = next.category ?? selectedCategory;
+    const product = next.product ?? selectedProductId;
+    const sort = next.sort ?? sortKey;
+    const special = searchParams?.special;
+    const query: Record<string, string> = {};
+
+    if (category) query.category = category;
+    if (product) query.product = product;
+    if (sort && sort !== "relevance") query.sort = sort;
+    if (special) query.special = special;
+
+    return { pathname: "/", query };
+  };
+
+  const orderBy =
+    sortKey === "price"
+      ? { price: "asc" as const }
+      : sortKey === "popular"
+        ? { stock: "desc" as const }
+        : { createdAt: "desc" as const };
+
+  const allProducts = await prisma.product.findMany({
     where: selectedCategory ? { category: { slug: selectedCategory } } : undefined,
     include: { category: true },
-    orderBy: { createdAt: "desc" }
+    orderBy
   });
+  const activeSpecial = specialCategories.find((item) => item.key === selectedSpecial) ?? null;
+  const products = activeSpecial
+    ? allProducts.filter((product) => {
+        const searchableText = `${product.name} ${product.description} ${product.category.name}`.toLowerCase();
+        return activeSpecial.keywords.some((keyword) => searchableText.includes(keyword));
+      })
+    : allProducts;
   const featuredProduct =
     products.find((product) => product.id === selectedProductId) ??
     products[0] ??
@@ -29,20 +80,33 @@ export default async function ShopPage({ searchParams }: PageProps) {
           <section>
             <p className="mb-3 text-sm font-semibold text-slate-800">Categories</p>
             <div className="space-y-2.5 text-sm text-slate-600">
-              <Link href="/" className={`flex items-center gap-2 ${!selectedCategory ? "font-medium text-emerald-700" : ""}`}>
-                <span className={`h-3.5 w-3.5 rounded border ${!selectedCategory ? "border-emerald-600 bg-emerald-500" : "border-slate-300"}`} />
+              <Link
+                href={{ pathname: "/", query: sortKey === "relevance" ? {} : { sort: sortKey } }}
+                className={`flex items-center gap-2 ${!selectedCategory && !selectedSpecial ? "font-medium text-emerald-700" : ""}`}
+              >
+                <span
+                  className={`h-3.5 w-3.5 rounded border ${
+                    !selectedCategory && !selectedSpecial ? "border-emerald-600 bg-emerald-500" : "border-slate-300"
+                  }`}
+                />
                 All
               </Link>
-              {categories.map((cat) => {
-                const active = selectedCategory === cat.slug;
+              {specialCategories.map((item) => {
+                const active = selectedSpecial === item.key;
                 return (
                   <Link
-                    key={cat.id}
-                    href={`/?category=${cat.slug}`}
+                    key={item.key}
+                    href={{
+                      pathname: "/",
+                      query: {
+                        ...(sortKey !== "relevance" ? { sort: sortKey } : {}),
+                        special: item.key
+                      }
+                    }}
                     className={`flex items-center gap-2 ${active ? "font-medium text-emerald-700" : ""}`}
                   >
                     <span className={`h-3.5 w-3.5 rounded border ${active ? "border-emerald-600 bg-emerald-500" : "border-slate-300"}`} />
-                    {cat.name}
+                    {item.label}
                   </Link>
                 );
               })}
@@ -65,16 +129,50 @@ export default async function ShopPage({ searchParams }: PageProps) {
           Search result for <span className="font-semibold text-slate-800">"{featuredProduct?.name ?? "Items"}"</span>
         </p>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="mr-2 text-slate-500">Sort</span>
-          <button className="rounded-full bg-emerald-600 px-4 py-1.5 text-white">Relevance</button>
-          <button className="rounded-full border border-slate-200 px-4 py-1.5 text-slate-600">Popular</button>
-          <button className="rounded-full border border-slate-200 px-4 py-1.5 text-slate-600">Most New</button>
-          <button className="rounded-full border border-slate-200 px-4 py-1.5 text-slate-600">Price</button>
+          <Link
+            href={getShopHref({ sort: nextSort, product: "" })}
+            className="mr-2 rounded-full border border-slate-200 px-3 py-1 text-slate-600 hover:bg-slate-50"
+            title={`Switch sort to ${nextSort}`}
+          >
+            Sort: {sortKey.replace("-", " ")}
+          </Link>
+          <Link
+            href={getShopHref({ sort: "relevance", product: "" })}
+            className={`rounded-full px-4 py-1.5 ${
+              sortKey === "relevance" ? "bg-emerald-600 text-white" : "border border-slate-200 text-slate-600"
+            }`}
+          >
+            Relevance
+          </Link>
+          <Link
+            href={getShopHref({ sort: "popular", product: "" })}
+            className={`rounded-full px-4 py-1.5 ${
+              sortKey === "popular" ? "bg-emerald-600 text-white" : "border border-slate-200 text-slate-600"
+            }`}
+          >
+            Popular
+          </Link>
+          <Link
+            href={getShopHref({ sort: "most-new", product: "" })}
+            className={`rounded-full px-4 py-1.5 ${
+              sortKey === "most-new" ? "bg-emerald-600 text-white" : "border border-slate-200 text-slate-600"
+            }`}
+          >
+            Most New
+          </Link>
+          <Link
+            href={getShopHref({ sort: "price", product: "" })}
+            className={`rounded-full px-4 py-1.5 ${
+              sortKey === "price" ? "bg-emerald-600 text-white" : "border border-slate-200 text-slate-600"
+            }`}
+          >
+            Price
+          </Link>
         </div>
         <div className="grid gap-4 xl:grid-cols-2">
           {products.map((product) => (
             <article key={product.id} className="rounded-2xl border border-slate-200 p-4">
-              <Link href={`/?category=${selectedCategory ?? ""}&product=${product.id}`} className="block">
+              <Link href={getShopHref({ product: product.id })} className="block">
                 <div className="mb-3 flex h-36 items-center justify-center rounded-xl bg-slate-100 text-xs text-slate-400">
                   {product.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
