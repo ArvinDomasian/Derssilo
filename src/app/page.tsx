@@ -108,6 +108,19 @@ export default async function ShopPage({ searchParams }: PageProps) {
     return { pathname: "/", query };
   };
 
+  const categoryCardClass =
+    "group flex items-center gap-3 rounded-2xl border border-transparent bg-white px-3 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.03] hover:border-emerald-100 hover:bg-emerald-50 hover:shadow-lg";
+  const nestedCategoryCardClass =
+    "block rounded-xl border border-transparent bg-white px-3 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:border-emerald-100 hover:bg-white hover:shadow-md";
+  const categoryDotClass = (active: boolean) =>
+    `h-3.5 w-3.5 rounded-full border transition-colors duration-200 ${
+      active ? "border-emerald-600 bg-emerald-500" : "border-slate-300 bg-white group-hover:border-emerald-400"
+    }`;
+  const categoryLinkStateClass = (active: boolean) =>
+    active ? "border-emerald-200 bg-emerald-50 font-medium text-emerald-700 shadow-sm" : "text-slate-600 hover:text-slate-900";
+  const nestedCategoryLinkStateClass = (active: boolean) =>
+    active ? "border-emerald-200 bg-emerald-50 font-semibold text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-800";
+
   const orderBy =
     sortKey === "price"
       ? { price: "asc" as const }
@@ -179,22 +192,18 @@ export default async function ShopPage({ searchParams }: PageProps) {
         <div className="space-y-6 p-5">
           <section>
             <p className="mb-3 text-sm font-semibold text-slate-800">Categories</p>
-            <div className="space-y-2.5 text-sm text-slate-600">
+            <div className="space-y-3 text-sm text-slate-600">
               <Link
                 href={{ pathname: "/", query: sortKey === "relevance" ? {} : { sort: sortKey } }}
-                className={`flex items-center gap-2 ${!selectedCategory && !selectedSpecial ? "font-medium text-emerald-700" : ""}`}
+                className={`${categoryCardClass} ${categoryLinkStateClass(!selectedCategory && !selectedSpecial)}`}
               >
-                <span
-                  className={`h-3.5 w-3.5 rounded border ${
-                    !selectedCategory && !selectedSpecial ? "border-emerald-600 bg-emerald-500" : "border-slate-300"
-                  }`}
-                />
+                <span className={categoryDotClass(!selectedCategory && !selectedSpecial)} />
                 All
               </Link>
               {specialCategories.map((item) => {
                 const active = selectedSpecial === item.key;
                 return (
-                  <div key={item.key} className="space-y-2">
+                  <div key={item.key} className="space-y-2.5">
                     <Link
                       href={getShopHref({
                         special: item.key,
@@ -211,20 +220,20 @@ export default async function ShopPage({ searchParams }: PageProps) {
                         child: item.key === "fashion" ? selectedChild : "",
                         product: ""
                       })}
-                      className={`flex items-center gap-2 ${active ? "font-medium text-emerald-700" : ""}`}
+                      className={`${categoryCardClass} ${categoryLinkStateClass(active)}`}
                     >
-                      <span className={`h-3.5 w-3.5 rounded border ${active ? "border-emerald-600 bg-emerald-500" : "border-slate-300"}`} />
+                      <span className={categoryDotClass(active)} />
                       {item.label}
                     </Link>
                     {item.key === "mobiles-gadgets" && active && (
-                      <div className="ml-5 space-y-1.5 border-l border-slate-200 pl-3 text-xs">
+                      <div className="ml-4 space-y-2 border-l border-slate-200 pl-4 text-xs">
                         {mobileSubCategories.map((subItem) => {
                           const subActive = selectedSub === subItem.key;
                           return (
                             <Link
                               key={subItem.key}
                               href={getShopHref({ special: "mobiles-gadgets", sub: subItem.key, product: "" })}
-                              className={`block ${subActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"}`}
+                              className={`${nestedCategoryCardClass} ${nestedCategoryLinkStateClass(subActive)}`}
                             >
                               {subItem.label}
                             </Link>
@@ -233,14 +242,14 @@ export default async function ShopPage({ searchParams }: PageProps) {
                       </div>
                     )}
                     {item.key === "health-personal-care" && active && (
-                      <div className="ml-5 space-y-1.5 border-l border-slate-200 pl-3 text-xs">
+                      <div className="ml-4 space-y-2 border-l border-slate-200 pl-4 text-xs">
                         {healthSubCategories.map((subItem) => {
                           const subActive = selectedSub === subItem.key;
                           return (
                             <Link
                               key={subItem.key}
                               href={getShopHref({ special: "health-personal-care", sub: subItem.key, product: "" })}
-                              className={`block ${subActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"}`}
+                              className={`${nestedCategoryCardClass} ${nestedCategoryLinkStateClass(subActive)}`}
                             >
                               {subItem.label}
                             </Link>
@@ -249,14 +258,14 @@ export default async function ShopPage({ searchParams }: PageProps) {
                       </div>
                     )}
                     {item.key === "home-living" && active && (
-                      <div className="ml-5 space-y-1.5 border-l border-slate-200 pl-3 text-xs">
+                      <div className="ml-4 space-y-2 border-l border-slate-200 pl-4 text-xs">
                         {homeSubCategories.map((subItem) => {
                           const subActive = selectedSub === subItem.key;
                           return (
                             <Link
                               key={subItem.key}
                               href={getShopHref({ special: "home-living", sub: subItem.key, product: "" })}
-                              className={`block ${subActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"}`}
+                              className={`${nestedCategoryCardClass} ${nestedCategoryLinkStateClass(subActive)}`}
                             >
                               {subItem.label}
                             </Link>
@@ -265,19 +274,19 @@ export default async function ShopPage({ searchParams }: PageProps) {
                       </div>
                     )}
                     {item.key === "fashion" && active && (
-                      <div className="ml-5 space-y-1.5 border-l border-slate-200 pl-3 text-xs">
+                      <div className="ml-4 space-y-2 border-l border-slate-200 pl-4 text-xs">
                         {fashionSubCategories.map((subItem) => {
                           const subActive = selectedSub === subItem.key;
                           return (
-                            <div key={subItem.key} className="space-y-1.5">
+                            <div key={subItem.key} className="space-y-2">
                               <Link
                                 href={getShopHref({ special: "fashion", sub: subItem.key, child: "", product: "" })}
-                                className={`block ${subActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"}`}
+                                className={`${nestedCategoryCardClass} ${nestedCategoryLinkStateClass(subActive)}`}
                               >
                                 {subItem.label}
                               </Link>
                               {subItem.key === "mens-wear" && subActive && (
-                                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                                <div className="ml-4 space-y-2 border-l border-slate-200 pl-4">
                                   {mensWearChildCategories.map((childItem) => {
                                     const childActive = selectedChild === childItem.key;
                                     return (
@@ -289,9 +298,7 @@ export default async function ShopPage({ searchParams }: PageProps) {
                                           child: childItem.key,
                                           product: ""
                                         })}
-                                        className={`block ${
-                                          childActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"
-                                        }`}
+                                        className={`${nestedCategoryCardClass} ${nestedCategoryLinkStateClass(childActive)}`}
                                       >
                                         {childItem.label}
                                       </Link>
@@ -300,7 +307,7 @@ export default async function ShopPage({ searchParams }: PageProps) {
                                 </div>
                               )}
                               {subItem.key === "womens-wear" && subActive && (
-                                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                                <div className="ml-4 space-y-2 border-l border-slate-200 pl-4">
                                   {womensWearChildCategories.map((childItem) => {
                                     const childActive = selectedChild === childItem.key;
                                     return (
@@ -312,9 +319,7 @@ export default async function ShopPage({ searchParams }: PageProps) {
                                           child: childItem.key,
                                           product: ""
                                         })}
-                                        className={`block ${
-                                          childActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"
-                                        }`}
+                                        className={`${nestedCategoryCardClass} ${nestedCategoryLinkStateClass(childActive)}`}
                                       >
                                         {childItem.label}
                                       </Link>
@@ -323,7 +328,7 @@ export default async function ShopPage({ searchParams }: PageProps) {
                                 </div>
                               )}
                               {subItem.key === "kids-wear" && subActive && (
-                                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                                <div className="ml-4 space-y-2 border-l border-slate-200 pl-4">
                                   {kidsWearChildCategories.map((childItem) => {
                                     const childActive = selectedChild === childItem.key;
                                     return (
@@ -335,9 +340,7 @@ export default async function ShopPage({ searchParams }: PageProps) {
                                           child: childItem.key,
                                           product: ""
                                         })}
-                                        className={`block ${
-                                          childActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"
-                                        }`}
+                                        className={`${nestedCategoryCardClass} ${nestedCategoryLinkStateClass(childActive)}`}
                                       >
                                         {childItem.label}
                                       </Link>
@@ -346,7 +349,7 @@ export default async function ShopPage({ searchParams }: PageProps) {
                                 </div>
                               )}
                               {subItem.key === "footwear" && subActive && (
-                                <div className="ml-4 space-y-1 border-l border-slate-200 pl-3">
+                                <div className="ml-4 space-y-2 border-l border-slate-200 pl-4">
                                   {footwearChildCategories.map((childItem) => {
                                     const childActive = selectedChild === childItem.key;
                                     return (
@@ -358,9 +361,7 @@ export default async function ShopPage({ searchParams }: PageProps) {
                                           child: childItem.key,
                                           product: ""
                                         })}
-                                        className={`block ${
-                                          childActive ? "font-semibold text-emerald-700" : "text-slate-500 hover:text-slate-700"
-                                        }`}
+                                        className={`${nestedCategoryCardClass} ${nestedCategoryLinkStateClass(childActive)}`}
                                       >
                                         {childItem.label}
                                       </Link>
@@ -437,7 +438,10 @@ export default async function ShopPage({ searchParams }: PageProps) {
         </div>
         <div className="grid gap-4 xl:grid-cols-2">
           {products.map((product) => (
-            <article key={product.id} className="rounded-2xl border border-slate-200 p-4">
+            <article
+              key={product.id}
+              className="group relative rounded-2xl border border-slate-200 bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+            >
               <Link href={getShopHref({ product: product.id })} className="block">
                 <div className="mb-3 flex h-36 items-center justify-center rounded-xl bg-slate-100 text-xs text-slate-400">
                   {product.imageUrl ? (
@@ -455,9 +459,61 @@ export default async function ShopPage({ searchParams }: PageProps) {
                 <form action="/api/cart" method="post">
                   <input type="hidden" name="productId" value={product.id} />
                   <button className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700" type="submit">
-                    Add to cart
+                    Checkout
                   </button>
                 </form>
+              </div>
+
+              <div className="pointer-events-none absolute left-1/2 top-4 z-20 hidden w-[320px] -translate-x-1/2 rounded-[28px] border border-emerald-100 bg-white p-5 opacity-0 shadow-2xl transition-all duration-300 group-hover:pointer-events-auto group-hover:-translate-y-3 group-hover:opacity-100 lg:block">
+                <div className="space-y-4">
+                  <div className="flex h-52 items-center justify-center rounded-[24px] bg-slate-50 p-4 shadow-inner">
+                    <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[20px] bg-white">
+                      {product.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center rounded-[20px] border border-dashed border-slate-200 text-sm text-slate-400">
+                          Product image
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map((index) => (
+                      <div
+                        key={index}
+                        className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50"
+                      >
+                        {product.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={product.imageUrl} alt={`${product.name} preview ${index}`} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-[10px] text-slate-400">Img</span>
+                        )}
+                      </div>
+                    ))}
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-sm font-semibold text-white">
+                      +5
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-600">{product.category.name}</p>
+                    <h3 className="mt-2 text-2xl font-semibold leading-tight text-slate-900">{product.name}</h3>
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">{product.description}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Price</p>
+                      <p className="mt-1 text-2xl font-bold text-emerald-600">${product.price.toString()}</p>
+                    </div>
+                    <div className="rounded-full bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200">
+                      View item
+                    </div>
+                  </div>
+                </div>
               </div>
             </article>
           ))}

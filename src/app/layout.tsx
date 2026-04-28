@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
 import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { prisma } from "@/lib/prisma";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,21 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  let dbUser: { role: string } | null = null;
-
-  try {
-    const { userId } = auth();
-
-    if (userId) {
-      dbUser = await prisma.user.findUnique({
-        where: { clerkUserId: userId },
-        select: { role: true }
-      });
-    }
-  } catch {
-    dbUser = null;
-  }
-
   return (
     <ClerkProvider>
       <html lang="en">
@@ -48,13 +31,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <Link href="/messages" className="hover:text-slate-900">
                       Messages
                     </Link>
-                    {dbUser?.role === "ADMIN" && (
-                      <SignedIn>
-                        <Link href="/messages" className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800">
-                          Admin Actions
-                        </Link>
-                      </SignedIn>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
