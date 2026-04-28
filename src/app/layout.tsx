@@ -11,13 +11,20 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { userId } = auth();
-  const dbUser = userId
-    ? await prisma.user.findUnique({
+  let dbUser: { role: string } | null = null;
+
+  try {
+    const { userId } = auth();
+
+    if (userId) {
+      dbUser = await prisma.user.findUnique({
         where: { clerkUserId: userId },
         select: { role: true }
-      })
-    : null;
+      });
+    }
+  } catch {
+    dbUser = null;
+  }
 
   return (
     <ClerkProvider>
